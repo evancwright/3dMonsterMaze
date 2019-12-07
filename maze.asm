@@ -1,12 +1,14 @@
 ;maze.asm
 MAZE_SIZE EQU 361 ; size of maze data in bytes
-START_OFFSET EQU 340  ; hex 154
+START_OFFSET EQU 340  ; hex 154 bytes into the maze
 SCREEN_WIDTH_BYTES EQU 32
 TOP_DOWN_VSKIP EQU 13
 
 ;resets the maze and associated variables
 make_maze
 	pshs a,y
+	;uncheat
+	clr cheat
 	;reset maze to all walls
 	lda #WALL
 	ldy #0
@@ -169,121 +171,185 @@ move_cusor
 	rts
 
 
-;sets y to a pointer in the maze
+;used to find a square for an exit pattern on open up into
+;sets y to a pointer in the maze\
+;u  =min x b = x range
+;u[1] = max y, b = y range 
 ;x >= 2 and x <= 15
 ;y >= 2 and x <= 15
 get_rand_open
-@lp
-	jsr rand
-	pulu d
-	anda #$0F
-	inca 
-	inca
-	anda #$0F
-	andb #$0F
-	incb
-	incb
-	andb #$0F
-	;now 2-15
-	pshs a
-	lda #19
-	mul ; y * 19 -> d
-	tfr d,y
+@lp ; get a random x
 	lda #0
-	puls b ; pullx 
-	pshs d  ; 0,x to top off stack
-	tfr y,d  ; 
+	ldb 1,u ; load x range
+	pshu d
+	jsr randmod
+	pulu d
+	addb ,u ; add min x  
+	stb xcoord
+	;generate y
+	lda #0 ; clear a 
+	ldb 3,u ; load y range
+	pshu d
+	jsr randmod
+	pulu d
+	addb 2,u ; add min y  
+	stb ycoord	
+	;convert the x,y coord to an offset withtin the maze data
+	lda #19
+	ldb ycoord
+	mul ; y * 19 -> d
+	pshs  d	; save intermediate value
+	lda #0 ; get x offset in d
+	ldb xcoord
 	addd ,s ; add x offset to coordinate3
-	leas 2,s ; "pop it"
-	tfr d,y
+	leas 2,s ; "pop" intermediate value
+	tfr d,y  ; move offset to y
 	leay maze_data,y
-	lda ,y
+	lda ,y  ; get square at the offset
 	cmpa #EMPTY
 	bne @lp
 	rts
 	
-;place exit	
+;place exit
+;places one of the four exit types in the maze	
 place_exit
-;	jsr place_exit_up_left
-	jsr place_exit_right
+	ldd #4
+	pshu d
+	jsr randmod
+	pulu d
+	cmpb #0
+	bne @d
+	jsr place_exit_up
+	bra @x
+@d	cmpb #1
+	bne @l
+	jsr place_exit_down
+	bra @x
+@l	cmpb #2
+	bne @r
+	jsr place_exit_left
+	bra @x
+@r	jsr place_exit_right
+@x	rts
+
+
+place_exit_up
+	lda #1 ; min y 
+	ldb #15 ; y range (1-15 inclusive)
+	pshu d	
+	lda #2 ; min x 
+	ldb #16 ; x range (produces 2-17 inclusive)
+	pshu d
+	jsr get_rand_open
+	leau 4,u  ; pop params
+	leay 17,y  ; (place exit up,right of open square)
+	ldx #exit_up
+	lda #4
+	sta exitCols
+	lda #3
+	sta exitRows
+	ldd #15	; vertical skip
+	pshu d
+	jsr copy_exit_data
+	leau 2,u ; pop param
 	rts
 	
 ;find an open square and place the pattern
 ;down one and two left 
-;valid x: 2 - 18 inclusive
+;valid x: 1 - 15 inclusive
 ;valid y: 1 - 15 inclusive
-place_exit_up_left
+place_exit_left
+	lda #1 ; min y 
+	ldb #16 ; y range (1-16 inclusive)
+	pshu d	
+	lda #1 ; min x 
+	ldb #15 ; x range (produces 1-15 inclusive)
+	pshu d
 	jsr get_rand_open
-	leay 17,y  ; +19-2 (
-	ldx #exit_up_left
-	ldb #0
-@l1	lda ,x+
-	sta ,y+
-	incb
-	cmpb #4
-	bne @l1
-	;drop dest down one line in maze_data
-	leay 15,y
-	;copy 2nd row
-	ldb #0
-@l2	lda ,x+
-	sta ,y+
-	incb
-	cmpb #4
-	bne @l2
-	;drop dest down one line in maze_data
-	leay 15,y
-	;copy 3rd row
-	ldb #0
-@l3	lda ,x+
-	sta ,y+
-	incb
-	cmpb #4
-	bne @l3	
+	leau 4,u  ; pop params
+	leay -18,y  ; (place exit up,right of open square)
+	ldx #exit_left
+	lda #3
+	sta exitCols
+	lda #4
+	sta exitRows
+	ldd #16	; vertical skip
+	pshu d
+	jsr copy_exit_data
+	leau 2,u ; pop param
 	rts
 
 ;find an open square and place the pattern
 ;down one and one left 
-;valid x: 1 - 15 inclusive
-;valid y: 1 - 15 inclusive	
+;	.db 1,1,1
+;	.db	1,2,1
+;	.db	1,0,0
+;	.db	1,1,1
 place_exit_right
+	lda #2 ; min y 
+	ldb #16 ; y range (2-17 inclusive)
+	pshu d	
+	lda #3 ; min x 
+	ldb #15 ; x range (produces 3-17 inclusive)
+	pshu d
 	jsr get_rand_open
-	leay -35,y  ; +19-2 (
+	leay -41,y  ; -2*19-3 (
 	ldx #exit_right
-	ldb #0
-@l1	lda ,x+
-	sta ,y+
-	incb
-	cmpb #3
-	bne @l1
-	;drop dest down one line in maze_data
-	leay 15,y
-	;copy 2nd row
-	ldb #0
-@l2	lda ,x+
-	sta ,y+
-	incb
-	cmpb #3
-	bne @l2
-	;drop dest down one line in maze_data
-	leay 15,y
-	;copy 3rd row
-	ldb #0
-@l3	lda ,x+
-	sta ,y+
-	incb
-	cmpb #3
-	;fourth row
-	leay 15,y
-	ldb #0
-@l4	lda ,x+
-	sta ,y+
-	incb
-	cmpb #3
-	bne @l2
-	bne @l3	
+	lda #3
+	sta exitCols
+	lda #4
+	sta exitRows
+	ldd #16
+	pshu d
+	jsr copy_exit_data
+	leau 2,u ; pop param
 	rts
 	
+place_exit_down
+	lda #3 ; min y 
+	ldb #15 ; y range (3-17 inclusive)
+	pshu d	
+	lda #2 ; min x 
+	ldb #16 ; x range (produces 2-17 inclusive)
+	pshu d
+	jsr get_rand_open
+	leay -59,y  ; up three rows, left 2
+	ldx #exit_down
+	lda #4
+	sta exitCols
+	lda #3
+	sta exitRows
+	ldd #15 ; vskip when copying
+	pshu d
+	jsr copy_exit_data
+	leau 2,u ; pop param
+	rts
+	
+;copies a maze pattern into maze_data	
+;exitRows set
+;exitCols set
+;u = vskip amount
+;x contains address of pattern data
+;y contains copy destination
+copy_exit_data
+	lda #0
+@ol pshs a
+	ldb #0
+@il lda ,x+         ; copy a row
+	sta ,y+
+	incb
+	cmpb exitCols
+	bne @il
+	;drop down in the maze data
+	;leay 15,y
+	tfr y,d  ; y-> d
+	addd ,u
+	tfr d,y ; d->y
+	puls a ; restore loop counter
+	inca 
+	cmpa exitRows
+	bne @ol
+	rts
 	
 ;start at top left, put monster in 1st open square
 ;registers saved
@@ -313,16 +379,22 @@ draw_map_line
 	pshs  d,x,y
 	lda #0
 @lp pshs a  ; save loop counter
+	ldb #BLACK_FILL
 	cmpx player_location
 	bne @t
-	leax 1,x
-	ldb #BLUE_FILL
+	leax 1,x ; x++
+	ldb #BLUE_FILL ; draw player in blue
 	bra @d ; draw
-@t	lda ,x+ ; get a room from the map
+@t	lda ,x+ ; not player. Is it a visitted room
 	;is it a wall? (if not, just leave it black)
-	cmpa #WALL
+	tst cheat
+	beq @co  ; cheat off
+	cmpa #WALL  ; uncomment line when cheating
 	beq @s
-	ldb #WHITE_FILL ; four pixels of white
+	bra @w ; fill with white and draw
+@co	anda #VISITTED_BIT ; sets z bit  
+	beq @s
+@w	ldb #WHITE_FILL ; four pixels of white
 @d	stb ,y ; draw
 @s	leay 1,y
 	puls a  ; restore loop counter
@@ -350,11 +422,20 @@ draw_top_down
 	leax 19,x  ; drop down in map data
 	inca
 	cmpa #19
-	bne @lp
-	
+	bne @lp	
 	rts
 
-exit_up_left 
+;cheat_on
+;	ldx #$8101 ; cmpa #WALL
+;	stx  cheat_poke 
+;	rts
+
+;cheat_off
+;	ldx #$8408 ; anda #VISITTED_BIT
+;	stx  cheat_poke 
+;	rts
+	
+exit_up 
 	.db 1,1,0,1
 	.db	1,2,0,1
 	.db	1,1,1,1
@@ -371,13 +452,8 @@ exit_left
 	.db	1,2,1
 	.db	1,1,1
 	
-exit_down_left
+exit_down
 	.db 1,1,1,1
 	.db	1,2,0,1
 	.db	1,1,0,1
-
-exit_down_right
-	.db 1,1,1,1
-	.db	1,0,2,1
-	.db	1,0,1,1
 
