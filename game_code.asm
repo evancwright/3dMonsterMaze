@@ -16,7 +16,9 @@ VISITTED_BIT EQU 8
 CLEAR_MONSTER_MASK EQU 251 ; FBh
 CLEAR_BITS EQU 1
  
-
+TICKS_PER_UPDATE EQU 1024 ; 2048
+TICKS_PER_UPDATE_FAST EQU 768 ; 1024
+ 
 IDLE EQU 0		; lies in wait
 CHASING EQU 1	; sees player
 
@@ -117,6 +119,30 @@ TOP EQU 8
 LADDER_HEIGHT EQU 145
 LADDER_TOP EQU 16
 STEP_SPACING EQU 10
+ 
+
+;clear 400-600 hex, then set default values
+init_vars
+	lda #0
+	ldy #$400
+@lp sta ,y+
+	cmpy #$601
+	bne @lp
+	ldy #VRAM1
+	sty vramAddr
+	ldy #$0F0F ;
+	sty cur_rand	;	.dw 0x0f0f
+	; rand			.dw 0x0000
+	lda #$80
+	sta one_in_msb ; .db 0x80
+	sta left_tap_mask 	.db 0x80 ; 1000 0000
+	lda #$01
+	sta right_tap_mask ; .db 0x01 ; 0000 0001
+	lda #UP
+	sta cursorDir
+	ldy #TICKS_PER_UPDATE
+	sty monsterTicks
+	rts 
  
 ;sets tiles when player is facing up	
 set_tiles_up
@@ -1150,8 +1176,8 @@ overlay_monster
 
 ;draw wumpus 4 squares away
 ;this never gets called!
-draw_monster5
-	rts
+;draw_monster5
+;	rts
 
 ;draw wumpus 3 squares away
 draw_monster4
@@ -1313,6 +1339,8 @@ draw_monster1
 
  
 update_monster
+	ldy #TICKS_PER_UPDATE ; set monster to slow speed
+	sty monsterTicks
 	lda monster_state ; prev_state = state
 	sta prev_state
 	lda #IDLE
@@ -1337,7 +1365,10 @@ update_monster
 	tst player_seen
 	bne @d  ;  great, we're chasing player, done 
 	jsr update_monster2
-@d	ldy player_location
+	bra @e 
+@d	ldy #TICKS_PER_UPDATE_FAST ; speed up
+	sty monsterTicks
+@e	ldy player_location
 	cmpy monster_location
 	bne @s
 	jsr do_death_screen
