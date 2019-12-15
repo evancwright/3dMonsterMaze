@@ -347,6 +347,7 @@ any_key
 	include random.asm
 	include drawing.asm
  	include maze.asm
+	include draw_front.asm
 	include sprites.asm
 	include calibration_sprites.asm
 	include tile_maps.asm

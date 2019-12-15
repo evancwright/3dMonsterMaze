@@ -70,3 +70,16 @@ exitRows EQU $5B3 ; used for copying exit data to maze
 exitCols EQU $5B4 ; used for copying exit data to maze
 cheat EQU $5B5 ;show entire map
 monsterTicks EQU $5B6 ; how fast to update monster
+
+leftEdgeX EQU $5B8 ; for drawing front
+rightEdgeX EQU $5BA ; for drawing front
+frontWidth EQU $5BB ; for drawing front
+frontVSkipH EQU $5BC ; 0 padding
+frontVSkipL EQU $5BD ; for drawing front
+howManyCheckered EQU $5BE ; for drawing front
+howManyTopWhite EQU $5BF
+howManyBottomWhite EQU $5C0
+frontWallHeight EQU $5C1 
+leftEdgeOffset EQU $5C2
+rightEdgeOffset EQU $5C4
+

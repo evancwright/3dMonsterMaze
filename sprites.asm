@@ -1177,3 +1177,12 @@ game_over_tile_map
 	.dw orange_tile,orange_tile,orange_tile,orange_tile,orange_tile,orange_tile,orange_tile,orange_tile
 	.dw curved_tooth_up,orange_tooth_up,orange_tile,orange_tile,orange_tile,orange_tile,orange_tile,orange_tile
 	.dw black_tile,black_tile,curved_tooth_up,orange_tile,orange_tile,orange_tile,orange_tile,orange_tile
+
+;13 x 7
+retry_maze_sprite	
+	.db 3,12,12,12,207,63,60,240,48,192,243,63,195
+	.db 51,63,60,204,207,12,51,63,51,252,243,63,192
+	.db 15,15,60,63,63,51,48,60,240,192,252,252,204
+	.db 3,63,60,207,63,51,51,60,243,207,252,243,204
+	.db 51,63,60,207,63,63,51,51,243,255,252,207,204
+	.db 51,15,60,207,63,63,51,48,48,207,252,255,204

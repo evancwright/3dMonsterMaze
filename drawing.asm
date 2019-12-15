@@ -145,6 +145,8 @@ or_tile
 
 ;mask_tile(mask,tile)
 ;ab=x,y	
+;u = mask
+;user stack is popped by this call
 ;function clears up params
 ;uses a mask to draw the sprit
 mask_tile_2
