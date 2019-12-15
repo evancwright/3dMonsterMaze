@@ -1453,121 +1453,17 @@ absa
 	inca
 @x	rts
 
-;result in 'b'
-check_see_player_right
-	ldb #0
-	;check if y coords are same
-	lda player_y 
-	cmpa monster_y
-	bne @x
-	;look right until wall hit
-	ldy monster_location
-@lp	leay 1,y ; move right
-	lda ,y
-    cmpa #WALL
-    beq @x	
-	cmpy player_location
-	beq @y
-	bra @lp
-@y	lda #1
-	sta player_seen
-	lda #CHASING
-	sta monster_state
- 	lda #RIGHT
-	sta monster_direction
-	jsr move_monster
-	ldb #1
-@x	rts
-
-;result in b
-check_see_player_left
-	ldb #0
-	;check if y coords are same
-	lda player_y 
-	cmpa monster_y
-	bne @x
-	;look right until wall hit
-	ldy monster_location
-@lp	leay -1,y ; move right
-	lda ,y
-    cmpa #WALL
-    beq @x	
-	cmpy player_location
-	beq @y
-	bra @lp
-@y	lda #1
-	sta player_seen
-	lda #CHASING
-	sta monster_state
-	lda #LEFT
-	sta monster_direction
-	jsr move_monster
-	ldb #1
-@x	rts	
-
-;result in b
-check_see_player_up
-	ldb #0
-	;check if y coords are same
-	lda player_x 
-	cmpa monster_x
-	bne @x
-	;look right until wall hit
-	ldy monster_location
-@lp	leay -MAZE_WIDTH,y ; move right
-	lda ,y
-    cmpa #WALL
-    beq @x	
-	cmpy player_location
-	beq @y
-	bra @lp
-@y	lda #1
-	sta player_seen
-	lda #CHASING
-	sta monster_state
-	lda #UP
-	sta monster_direction
-	jsr move_monster
-	ldb #1
-@x	rts	
-
-;result in b
-check_see_player_down
-	ldb #0 
-	;check if y coords are same
-	lda player_x 
-	cmpa monster_x
-	bne @x
-	;look down until wall hit
-	ldy monster_location
-@lp	leay MAZE_WIDTH,y ; move right
-	lda ,y
-    cmpa #WALL
-    beq @x	
-	cmpy player_location
-	beq @y
-	bra @lp
-@y	lda #1
-	sta player_seen
-	lda #CHASING
-	sta monster_state
-	lda #DOWN
-	sta monster_direction
-	jsr move_monster
-	ldb #1
-@x	rts			
  	
 ;a contains direction  (UP,DOWN,LEFT,RIGHT)
 move_monster
 	pshu a	
 	;clear monster bit
-	ldy monster_location
+	ldy monster_location 
 	lda ,y
 	anda #CLEAR_MONSTER_MASK
 	sta ,y
 	pulu a
 	;move monster
-	ldy monster_location 
 	cmpa #UP
     bne	@d
 	leay -MAZE_WIDTH,y
@@ -1646,11 +1542,28 @@ do_death_screen
 	ldb #140
 	ldy #press_a_key
 	jsr draw_sprite
+	;draw 'hit r to retry sprite'
+	ldd #$070D  ; height,width 13x7
+	pshu d
+	ldd #$0C96 ;lda #10 ;ldb #150
+	ldy #retry_maze_sprite
+	jsr draw_sprite
 	jsr flip_buffer
 	;wait for input
-	jsr any_key
-	jsr reset_game
-	rts
+@lp	jsr [POLCAT] ; get new key down
+	cmpa #0
+	beq @lp
+	cmpa #'Y'
+	bne @r
+	lda monster_location
+	anda #CLEAR_MONSTER_MASK ; clear monster bit
+	sta monster_location
+	jsr place_player
+	jsr place_monster
+;	jsr set_tiles ; refresh what the player sees 
+	bra @x
+@r	jsr reset_game
+@x	rts
 
 ;reinitializes all rooms and places
 ;player and hazards
@@ -1659,19 +1572,20 @@ reset_game
 	jsr cls
 	jsr make_maze  ; carve out passages
 	;put player back at bottom right,facing up
+	jsr place_player
+	;place monster at top left
+	jsr place_monster
+	jsr set_tiles ; refresh what the player sees 
+	rts
+
+place_player
 	ldy #START_OFFSET
 	leay maze_data,y
 	sty player_location
 	lda #UP
 	sta direction
 	jsr set_player_xy
-	;place monster at top left
-	jsr place_monster
-	;and clear its state
-	clr monster_state
-	jsr set_tiles ; refresh what the player sees 
 	rts
-
 
 draw_player_direction
 	lda direction

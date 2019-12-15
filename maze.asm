@@ -365,6 +365,8 @@ place_monster
 	sta ,y ; write monster back to maze
 	sty monster_location
 	jsr set_monster_xy
+	;and clear its state
+	clr monster_state
 	puls d,y
 	rts
 

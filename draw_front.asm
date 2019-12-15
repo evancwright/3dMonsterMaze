@@ -1,4 +1,4 @@
-;routines for drawing front wall
+;routines for drawing front walls
 
 draw_front1
 	ldy #WALL_2_LEFT_X
@@ -89,7 +89,8 @@ draw_front4
 	sta howManyBottomWhite
 	lda #72 
 	sta frontWallHeight
-	ldy #1836  ; 12? 
+	;ldy #1836  ; 12? 
+	ldy #1804
 	sty leftEdgeOffset
 	ldy #1811
 	sty rightEdgeOffset

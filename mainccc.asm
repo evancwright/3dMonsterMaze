@@ -351,15 +351,14 @@ any_key
 	rts
 
 	
-	include draw_front.asm
-
   	include game_code.asm
+	include line_of_sight.asm
  	include orientation.asm
 	include math.asm
 	include random.asm
 	include drawing.asm
  	include maze.asm
-;	include draw_front.asm
+	include draw_front.asm
 	include sprites.asm
 	include calibration_sprites.asm
 	include tile_maps.asm

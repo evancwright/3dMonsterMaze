@@ -342,6 +342,7 @@ any_key
 	rts
 	
   	include game_code.asm
+	include line_of_sight.asm
  	include orientation.asm
 	include math.asm
 	include random.asm
