@@ -37,13 +37,13 @@ draw_front2
 	sta howManyTopWhite
 	lda #56
 	sta howManyCheckered
-	lda #23
+	lda #25
 	sta howManyBottomWhite
-	lda #113
+	lda #112
 	sta frontWallHeight
-	ldy #1159
+	ldy #1159+32
 	sty leftEdgeOffset
-	ldy #1176
+	ldy #1176+32
 	sty rightEdgeOffset
 	jsr draw_front
 	rts	
