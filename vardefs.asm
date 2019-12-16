@@ -82,4 +82,4 @@ howManyBottomWhite EQU $5C0
 frontWallHeight EQU $5C1 
 leftEdgeOffset EQU $5C2
 rightEdgeOffset EQU $5C4
-
+drawMap EQU $5C6

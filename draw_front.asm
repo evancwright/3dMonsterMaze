@@ -37,9 +37,9 @@ draw_front2
 	sta howManyTopWhite
 	lda #55
 	sta howManyCheckered
-	lda #25
+	lda #28
 	sta howManyBottomWhite
-	lda #112
+	lda #111
 	sta frontWallHeight
 	ldy #1159+32
 	sty leftEdgeOffset

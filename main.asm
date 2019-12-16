@@ -126,9 +126,9 @@ reset
 	beq @lp
 	cmpa #'M'
 	bne @k
-	lda cheat
+	lda showMap
 	eora #1  ; flip it
-	sta cheat
+	sta showMap
 	jsr set_tiles
 	jsr draw_tiles ; redraw in case monster now visible
 	bra @lp

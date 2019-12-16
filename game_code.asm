@@ -143,6 +143,8 @@ init_vars
 	sta cursorDir
 	ldy #TICKS_PER_UPDATE
 	sty monsterTicks
+	lda #8
+	sta drawMap
 	rts 
  
 ;sets tiles when player is facing up	
@@ -535,7 +537,17 @@ draw_tiles
 	anda #EXIT_MASK
 	beq @l
 	jsr draw_exit1
-@l	jsr flip_buffer
+@l	;draw map help
+	lda drawMap
+	beq @nm
+	dec drawMap
+	ldd #$060E  ; 12 x 6 
+	pshu d
+	lda #11  ; x,y
+	ldb #185
+	ldy #map_help
+	jsr draw_sprite	
+@nm	jsr flip_buffer	
 	rts
 	
 ;draws the text over the view	
@@ -1185,8 +1197,8 @@ draw_monster4
 	lda #56 ; height
 	pshu a
 	lda #14  ; x,y
-	;ldb #68 + TOP
-	ldb #71 + TOP
+	ldb #68 + TOP
+	;ldb #71 + TOP
 	ldy #monster4_mask
 	jsr draw_mask
 	leau -2,u ; repush params
@@ -1201,7 +1213,8 @@ draw_monster3
 	lda #72 ; height
 	pshu a
 	lda #14  ; x,y
-	ldb #56 + TOP
+	;ldb #56 + TOP
+	ldb #62 + TOP
 	ldy #monster3_mask
 	jsr draw_mask
 	leau -2,u
@@ -1560,10 +1573,11 @@ do_death_screen
 	sta monster_location
 	jsr place_player
 	jsr place_monster
-;	jsr set_tiles ; refresh what the player sees 
+	jsr set_tiles ; refresh what the player sees 
 	bra @x
 @r	jsr reset_game  ; brand new game
-@x	rts
+@x	jsr flip_buffer
+	rts
 
 ;reinitializes all rooms and places
 ;player and hazards
@@ -1616,10 +1630,12 @@ draw_player_direction
 	bra @d
 @w  ldy #compass_east	
 @d	
-	lda #2 ; width
-	pshu a
-	lda #8
-	pshu a
+;	lda #2 ; width
+;	pshu a
+;	lda #8
+;	pshu a
+	ldd #$0802
+	pshu d
 	lda #16  ; x,y
 	ldb #175
 	jsr draw_sprite

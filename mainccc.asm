@@ -85,6 +85,8 @@ VRAM2 EQU $2600 ; 2nd graphics buffer (page 14)
 	ORG 0xC000
 START
 
+
+
 main
 	jsr init_vars
 	lda #BLACK_FILL
