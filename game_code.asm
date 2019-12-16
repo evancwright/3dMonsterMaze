@@ -1568,11 +1568,16 @@ do_death_screen
 ;reinitializes all rooms and places
 ;player and hazards
 reset_game
-	lda #WHITE_FILL
-	jsr cls
+;	lda #WHITE_FILL
+;	jsr cls
+try_again
 	jsr make_maze  ; carve out passages
 	;put player back at bottom right,facing up
 	jsr place_player
+	;make sure player doesn't start at exit
+	lda player_location
+	anda #EXIT_MASK
+	bne try_again
 	;place monster at top left
 	jsr place_monster
 	jsr set_tiles ; refresh what the player sees 
