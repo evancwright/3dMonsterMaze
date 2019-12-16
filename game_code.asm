@@ -1543,18 +1543,18 @@ do_death_screen
 	ldy #press_a_key
 	jsr draw_sprite
 	;draw 'hit r to retry sprite'
-	ldd #$070D  ; height,width 13x7
-	pshu d
-	ldd #$0C96 ;lda #10 ;ldb #150
-	ldy #retry_maze_sprite
-	jsr draw_sprite
+;	ldd #$070D  ; height,width 13x7
+;	pshu d
+;	ldd #$0C96 ;lda #10 ;ldb #150
+;	ldy #retry_maze_sprite
+;	jsr draw_sprite
 	jsr flip_buffer
 	;wait for input
 @lp	jsr [POLCAT] ; get new key down
 	cmpa #0
 	beq @lp
-	cmpa #'Y'
-	bne @r
+;	cmpa #'Y'
+	bra @r  ; disabled trying again
 	lda monster_location
 	anda #CLEAR_MONSTER_MASK ; clear monster bit
 	sta monster_location
@@ -1562,7 +1562,7 @@ do_death_screen
 	jsr place_monster
 ;	jsr set_tiles ; refresh what the player sees 
 	bra @x
-@r	jsr reset_game
+@r	jsr reset_game  ; brand new game
 @x	rts
 
 ;reinitializes all rooms and places
