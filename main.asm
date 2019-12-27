@@ -221,16 +221,19 @@ draw_title
 	lda #1  ; x
 	pshu a
 	jsr fill_rect
-	lda #2
-	ldb #13
+;	lda #2
+;	ldb #13
+	ldd #$020D
 	ldy #letter_3_sprite
 	jsr draw_letter
-	lda #4
-	ldb #13
+;	lda #4
+;	ldb #13
+	ldd #$040D
 	ldy #letter_d_sprite
 	jsr draw_letter
-	lda #7
-	ldb #13
+;	lda #7
+;	ldb #13
+	ldd #$09D
 	ldy #letter_m_sprite
 	jsr draw_letter
 	lda #9
@@ -270,8 +273,9 @@ draw_title
 	pshu a
 	lda #6
 	pshu a
-	lda #11
-	ldb #32
+;	lda #11
+;	ldb #32
+	ldd #$0B20
 	ldy #evan_sprite
 	jsr draw_sprite
 	; draw press any key

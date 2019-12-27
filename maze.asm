@@ -360,13 +360,8 @@ place_monster
 @lp lda ,y+  ; find 1st open square
 	cmpa #WALL
 	beq @lp
-	ora #MONSTER_BIT
 	leay -1,y ; back up
-	sta ,y ; write monster back to maze
-	sty monster_location
-	jsr set_monster_xy
-	;and clear its state
-	clr monster_state
+	jsr move_monster_bits
 	puls d,y
 	rts
 
@@ -427,6 +422,27 @@ draw_top_down
 	bne @lp	
 	rts
 
+;teleport_monster
+;moves the monster to a corner if stuck for too long
+teleport_monster
+@lp ;lda #1 ; min y 
+	;ldb #17 ; y range (2-17 inclusive)
+	ldd #$0211
+	pshu d  ; x and y range are same	
+	pshu d
+	jsr get_rand_open	
+	leau 4,u  ; pop params
+	;remove monster from current location
+	jsr move_monster_bits
+	;too close?
+	jsr get_monster_dist
+	lda diff_sum
+	cmpa #5
+	bcs @lp
+	;clear the monster_state
+	clr monster_state
+	rts
+	
 ;cheat_on
 ;	ldx #$8101 ; cmpa #WALL
 ;	stx  cheat_poke 

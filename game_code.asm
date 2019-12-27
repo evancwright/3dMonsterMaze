@@ -145,6 +145,8 @@ init_vars
 	sty monsterTicks
 	lda #8
 	sta drawMap
+	ldy #400 ; just put monster somewhere
+	sty monster_location
 	rts 
  
 ;sets tiles when player is facing up	
@@ -330,10 +332,11 @@ draw_tiles
 @l1	
 	lda #1 ; width
 	pshu a
-	lda #WALL_HEIGHT
+	lda #WALL_HEIGHT ; 168
 	pshu a
-	lda #0  ; x,y
-	ldb #TOP
+;	lda #0  ; x,y
+;	ldb #TOP  ; 8
+	ldd #$0008
 	jsr draw_sprite
 	;right 1
 	lda #1 ; width
@@ -543,8 +546,9 @@ draw_tiles
 	dec drawMap
 	ldd #$060E  ; 12 x 6 
 	pshu d
-	lda #11  ; x,y
-	ldb #185
+;	lda #11  ; x,y
+;	ldb #185
+	ldd #$0BB9 ; 11-185
 	ldy #map_help
 	jsr draw_sprite	
 @nm	jsr flip_buffer	
@@ -570,13 +574,15 @@ draw_monster_state
 	lda monster_state
 	cmpa #IDLE
 	bne @th
+	inc turnsStuck
 	ldy #lies_in_wait_sprite ; couldn't move
 	lda #13 ; width in bytes
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-	lda #9  ; x in bytes , y in pixels
-	ldb #0
+;	lda #9  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0900
 	jsr draw_sprite	
 	lbra @x 
 @th ;dist > 8
@@ -589,8 +595,9 @@ draw_monster_state
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-	lda #8  ; x in bytes , y in pixels
-	ldb #0
+;	lda #8  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0800	
 	jsr draw_sprite
 	bra @x	
 @tf  ;test footsteps approaching (7 or 8)
@@ -605,8 +612,9 @@ draw_monster_state
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-	lda #7  ; x in bytes , y in pixels
-	ldb #0
+;	lda #7  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0700	
 	jsr draw_sprite
 	bra @x
 @ts ;test seen (3-6 and los)
@@ -625,8 +633,9 @@ draw_monster_state
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-	lda #9  ; x in bytes , y in pixels
-	ldb #0
+;	lda #9  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0900
 	jsr draw_sprite
 	bra @x
 @bs ;is the monster to the side of the player?
@@ -639,8 +648,9 @@ draw_monster_state
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-	lda #6  ; x in bytes , y in pixels
-	ldb #0
+;	lda #6  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0600
 	jsr draw_sprite	
 	bra @x
 @bh ;is the monster behind the player?
@@ -651,8 +661,9 @@ draw_monster_state
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-	lda #11  ; x in bytes , y in pixels
-	ldb #0
+;	lda #11  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0B00
 	jsr draw_sprite
 @x	rts
 
@@ -662,8 +673,9 @@ draw_exit1
 	tfr x,y
 	leax 333,x ; (LADDER_TOP*32 +18)
 	leay 338,y ; (LADDER_TOP*32 +18)
-	lda #0
-	ldb #0
+;	lda #0
+;	ldb #0
+	ldd #0
 @lp pshs a
 	lda #BLACK_FILL
 	sta ,x
@@ -990,8 +1002,9 @@ draw_exit1
 draw_white_lines
 	lda #0
 @ol	pshs a ; save loop counter
-	ldb #255
- 	lda #0
+;	ldb #255
+;	lda #0
+	ldd #$00FF
 @l1	stb ,y+  ; 1st line
 	inca
 	cmpa ,u
@@ -1334,9 +1347,12 @@ draw_monster1
 	jsr mask_tile_2
 	rts
 
- 
 update_monster
-	ldy #TICKS_PER_UPDATE ; set monster to slow speed
+	lda turnsStuck
+	cmpa #20
+	bne @g
+	jsr teleport_monster
+@g	ldy #TICKS_PER_UPDATE ; set monster to slow speed
 	sty monsterTicks
 	lda monster_state ; prev_state = state
 	sta prev_state
@@ -1361,7 +1377,7 @@ update_monster
 	bne @d
 	tst player_seen
 	bne @d  ;  great, we're chasing player, done 
-	jsr update_monster2
+	jsr update_monster2  ; move monster
 	bra @e 
 @d	ldy #TICKS_PER_UPDATE_FAST ; speed up
 	sty monsterTicks
@@ -1466,16 +1482,12 @@ absa
 	inca
 @x	rts
 
- 	
+;move monster up,down,left,right
 ;a contains direction  (UP,DOWN,LEFT,RIGHT)
 move_monster
-	pshu a	
-	;clear monster bit
-	ldy monster_location 
-	lda ,y
-	anda #CLEAR_MONSTER_MASK
-	sta ,y
-	pulu a
+	ldy monster_location
+	;clear monster stuck
+	clr turnsStuck
 	;move monster
 	cmpa #UP
     bne	@d
@@ -1490,14 +1502,24 @@ move_monster
 	leay -1,y
 	bra @m
 @r	leay 1,y  ; must have been right
-@m	;set monster bit
+@m	jsr move_monster_bits
+	rts
+
+;y = new location
+move_monster_bits	
+	;clear monster bit
+	ldx monster_location 
+	lda ,x
+	anda #CLEAR_MONSTER_MASK
+	sta ,x
+	;set new monster bit
 	sty monster_location
 	lda ,y
 	ora #MONSTER_MASK
 	sta ,y
 	jsr set_monster_xy
 	rts
-
+	
 ;sets player x,y and marks the square as visitted	
 set_player_xy
 	pshs a
@@ -1632,7 +1654,9 @@ draw_player_direction
 	jsr draw_sprite
 	rts
 
-	
+;figures out the horizontal,vertical,and sum distance
+;from the player to the monster and stores them in 
+;global variables
 get_monster_dist
 	lda monster_x
 	suba player_x
