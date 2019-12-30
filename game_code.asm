@@ -50,6 +50,7 @@ FRONT_1_WIDTH EQU 30
 CHECKER1 EQU 51
 CHECKER2 EQU 204
 
+
 	
 MAZE_WIDTH  EQU  19
 MAZE_HEIGHT EQU  19
@@ -324,40 +325,43 @@ draw_tiles
 	jsr fill_rect
 ;1st set of walls
 	;left 1
-	ldy #hall_left_1
+	lda #CHECKER2 ; fill pattern
+	pshu a
 	lda left1_tile
 	anda #WALL
-	beq @l1
-	ldy #wall_left_1
-@l1	
-	lda #1 ; width
-	pshu a
-	lda #WALL_HEIGHT ; 168
-	pshu a
-;	lda #0  ; x,y
-;	ldb #TOP  ; 8
-	ldd #$0008
-	jsr draw_sprite
-	;right 1
-	lda #1 ; width
-	pshu a
-	lda #WALL_HEIGHT
+	beq @wl1 ; 
+	ldd #wall_1_bottom ;it's wall (walls are angled)
+	pshu d
+	ldd #wall_left_1
+	bra @dl1
+@wl1 ; it's a hall 
+	ldd #hall_1_bottom ;it's hall  ; 
+	pshu d
+	ldd #hall_left_1
+@dl1 ; draw left 1 away
+	pshu d  ; save 2 bytes!
+	ldy #256 ; 0bytes over 8 down
+	jsr draw_wall_1
+	;right 1  ( 0 tiles forward )
+	lda #CHECKER1 ; fill pattern2
 	pshu a
 	lda right1_tile
 	anda #WALL
-	beq @r1
-	lda #WALL_1_RIGHT_X  ; x,y
-	ldb #TOP
-	ldy #wall_left_1
-	jsr draw_sprite_hflipped
-	bra @sk
-@r1	
-	lda #WALL_1_RIGHT_X  ; x,y
-	ldb #TOP
-	;ldy #hall_right_1
-	ldy #hall_left_1
-	jsr draw_sprite_hflipped
-;is the there a center wall?
+	beq @wr1
+	;it's a wall 
+	ldd #wall_right_1_bottom ; (walls are angled)
+	pshu d
+	ldd #wall_right_1
+	bra @dr1
+@wr1 ; it's a hall
+	ldd #hall_1_bottom
+	pshu d
+	ldd #hall_left_1
+@dr1	; draw 1 right
+	pshu d ; push 1st param
+	ldy #287   ; offset 8 down 31 over
+	jsr draw_wall_1
+	;is the there a center wall?
 @sk	lda front1_tile
 	anda #CLEAR_BITS ; clear wumpus or exit
 	beq @f1
@@ -1653,7 +1657,45 @@ draw_player_direction
 	ldb #175
 	jsr draw_sprite
 	rts
+	
+;y contains the screen location
+;to start copying to
+;	ldy #WALL_1
+;draw_wall_1(top sprite, bottom sprite, pattern)
+; 0,u contains top sprite addr
+; 2,u contains bottom sprite addr
+; 4,u contains pattern
+draw_wall_1
+	tfr y,d ; add vram offset
+	addd vramAddr
+	tfr d,y
+	ldx ,u
+	ldb #5
+@l1 lda ,x+
+	sta ,y
+	leay SCREEN_WIDTH_BYTES,y ;drop down one row
+	decb
+	bne @l1
+;now draw the alternating pairs
+	ldb #159 ; 159 lines
+	lda 4,u  ; load pattern
+@l2 sta ,y
+	leay SCREEN_WIDTH_BYTES,y ;drop down one line
+	coma
+	decb
+	bne @l2
+;now draw the bottom
+	ldx 2,u 
+	ldb #4
+@l3 lda ,x+
+	sta ,y
+	leay SCREEN_WIDTH_BYTES,y ;drop down one line
+	decb	
+	bne @l3
+	leau 5,u ; pop params
+	rts
 
+	
 ;figures out the horizontal,vertical,and sum distance
 ;from the player to the monster and stores them in 
 ;global variables
