@@ -370,37 +370,22 @@ draw_tiles
 @f1
 ;second walls down	
 	;left 2
-	ldy #hall_left_2
-	lda left2_tile
+ 	lda left2_tile
 	anda #WALL
 	beq @l2
-	ldy #wall_left_2
+	jsr draw_wall_2_left
+	bra @sl
 @l2	
-	lda #WALL_2_WIDTH ; width
-	pshu a
-	lda #WALL_HEIGHT
-	pshu a
-	lda #WALL_2_LEFT_X  ; x,y
-	ldb #TOP
-	jsr draw_sprite
-	;right 2
-	lda #WALL_2_WIDTH ; width
-	pshu a
-	lda #WALL_HEIGHT
-	pshu a
-	lda right2_tile ; wall or hall?
+	jsr draw_hall_2_left
+@sl
+ 	;right 2
+ 	lda right2_tile ; wall or hall?
 	anda #WALL
 	beq @r2
-	lda #WALL_2_RIGHT_X  ; x,y
-	ldb #TOP
-	ldy #wall_left_2	
-	jsr draw_sprite_hflipped
-	bra @sk1
+	jsr draw_wall_2_right
+ 	bra @sk1
 @r2	 ; hall
-	lda #WALL_2_RIGHT_X  ; x,y
-	ldb #TOP
-	ldy #hall_left_2
-	jsr draw_sprite_hflipped
+	jsr draw_hall_2_right
 ;is the there a center wall?
 @sk1	lda front2_tile
 	anda #CLEAR_BITS ; clear wumpus or exit
@@ -1670,7 +1655,7 @@ draw_wall_1
 	addd vramAddr
 	tfr d,y
 	ldx ,u
-	ldb #5
+	ldb #5  ; sprite is 5 tall?
 @l1 lda ,x+
 	sta ,y
 	leay SCREEN_WIDTH_BYTES,y ;drop down one row
@@ -1695,7 +1680,230 @@ draw_wall_1
 	leau 5,u ; pop params
 	rts
 
+
+draw_wall_2_left
+	lda #WALL_2_WIDTH ; width
+	pshu a
+	lda #WALL_HEIGHT
+	pshu a
+	lda #WALL_2_LEFT_X  ; x,y
+	ldb #TOP
+	ldy #wall_left_2
+	jsr draw_sprite
+ 	rts
+
+draw_wall_2_right
+	lda #WALL_2_WIDTH ; width
+	pshu a
+	lda #WALL_HEIGHT
+	pshu a
+	lda #WALL_2_RIGHT_X  ; x,y
+	ldb #TOP
+	ldy #wall_left_2
+ 	jsr draw_sprite_hflipped
+ 	rts
 	
+draw_hall_2_left
+	ldd #WALL_2_LEFT_X
+	pshs d
+	lda #TOP
+	ldb #32 ; screen width
+	mul 
+	addd ,s
+	pshs d
+	ldd vramAddr
+	addd ,s
+	tfr d,y
+	leas 4,s
+	;draw 5 lines of white (255)
+	;drawline(number, len, pattern)
+	ldx #white_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #5
+	pshu a
+	jsr draw_line
+
+	;draw 24 lines of 
+	;.db 63,255,255,255,255,255
+	;drawline(number, len, pattern)
+	ldx #hall_2_left_edge
+	pshu x
+	ldd #6
+	pshu d
+	lda #24
+	pshu a
+	jsr draw_line
+	
+	;draw 1 lines of 
+	;draw line of 0,0,0,0,0,0
+	ldx #black_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #1
+	pshu a
+	jsr draw_line
+	
+	;55 pairs offset	
+	;.db 51,51,51,51,51,51
+	;.db 12,204,204,204,204,204
+	ldb #55
+@lp 
+	pshs b
+    lda #51
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	leay SCREEN_WIDTH_BYTES-6,y ; drop down
+	lda #12
+	sta ,y+
+	lda #204
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	leay SCREEN_WIDTH_BYTES-6,y ; drop down
+	puls b
+	decb
+	lbne @lp
+	
+	;a line of zeros
+	ldx #black_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #1
+	pshu a
+	jsr draw_line
+	
+	;23 lines of 
+	;.db 63,255,255,255,255,255
+	ldx #hall_2_left_edge
+	pshu x
+	ldd #6
+	pshu d
+	lda #23
+	pshu a
+	jsr draw_line
+
+	;7 lines of 
+	;.db 255,255,255,255,255,255
+	ldx #white_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #7
+	pshu a
+	jsr draw_line
+	
+	rts
+	
+draw_hall_2_right
+	ldd #WALL_2_RIGHT_X
+	pshs d
+	lda #TOP
+	ldb #32
+	mul
+	addd ,s
+	pshs d
+	ldd vramAddr
+	addd ,s
+	tfr d,y
+	leas 4,s	;draw 5 lines of white (255)
+	;drawline(number, len, pattern)
+	ldx #white_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #5
+	pshu a
+	jsr draw_line
+
+	;draw 24 lines of 
+	;.db 63,255,255,255,255,255
+	;drawline(number, len, pattern)
+	ldx #hall_2_right_edge
+	pshu x
+	ldd #6
+	pshu d
+	lda #24
+	pshu a
+	jsr draw_line
+	
+	;draw 1 lines of 
+	;draw line of 0,0,0,0,0,0
+	ldx #black_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #1
+	pshu a
+	jsr draw_line
+	
+	;55 pairs offset	
+	;.db 51,51,51,51,51,51
+	;.db 12,204,204,204,204,204
+	ldb #55
+@lp 
+	pshs b
+    lda #204  ; 51 -> 204
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	leay SCREEN_WIDTH_BYTES-6,y ; drop down
+	lda #51 ; 204 -> 51
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	sta ,y+
+	lda #48  ; 12 -> 48 
+	sta ,y+
+	leay SCREEN_WIDTH_BYTES-6,y ; drop down
+	puls b
+	decb
+	bne @lp
+	
+	;a line of zeros
+	ldx #black_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #1
+	pshu a
+	jsr draw_line
+	
+	;23 lines of 
+	;.db 255,255,255,255,255,252
+	ldx #hall_2_right_edge
+	pshu x
+	ldd #6
+	pshu d
+	lda #23
+	pshu a
+	jsr draw_line
+
+	;7 lines of 
+	;.db 255,255,255,255,255,255
+	ldx #white_line
+	pshu x
+	ldd #6
+	pshu d
+	lda #7
+	pshu a
+	jsr draw_line
+
+ 	rts
+
 ;figures out the horizontal,vertical,and sum distance
 ;from the player to the monster and stores them in 
 ;global variables
@@ -1713,6 +1921,31 @@ get_monster_dist
 	sta diff_sum
 	rts
 
+;drawline(howmany, len (2 bytes), pattern)
+;u = how many
+;2,u = len
+;3,u = pattern addr
+draw_line
+	ldb ,u (load number of lines)
+@lp
+	pshs b ; save outer loop counter
+	;inner loop
+	ldb 2,u ; load lsb (line len)
+	ldx 3,u ; load pattern addr
+@il	lda ,x+
+	sta ,y+
+	decb
+	bne @il
+	leay SCREEN_WIDTH_BYTES,y 	;drop down a line
+	tfr y,d
+	subd 1,u ; subtract line length (16 bits)
+	tfr d,y  
+	puls b ; restore loop counter
+	decb
+	bne @lp
+	leau 5,u ; pop params
+	rts
+	
 flip_buffer
 	;disable interrupts
 	PSHS CC     ;save CC

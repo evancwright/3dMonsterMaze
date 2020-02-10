@@ -84,3 +84,5 @@ leftEdgeOffset EQU $5C2
 rightEdgeOffset EQU $5C4
 drawMap EQU $5C6
 turnsStuck EQU $5C7
+playerWins EQU $5C8
+playerLosses EQU $5C9
