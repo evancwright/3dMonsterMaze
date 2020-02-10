@@ -148,6 +148,8 @@ init_vars
 	sta drawMap
 	ldy #400 ; just put monster somewhere
 	sty monster_location
+	ldx #static1
+	stx staticAddr
 	rts 
  
 ;sets tiles when player is facing up	
@@ -657,34 +659,66 @@ draw_monster_state
 @x	rts
 
 ;draws the escape ladder
+; draw_exit1
+	; ldx vramAddr 
+	; tfr x,y
+	; leax 333,x ; (LADDER_TOP*32 +18)
+	; leay 338,y ; (LADDER_TOP*32 +18)
+	; ldd #0
+; @lp pshs a
+	; lda #BLACK_FILL
+	; sta ,x
+	; sta ,y
+	; incb 
+	; cmpb #STEP_SPACING
+	; bne @s
+	; sta 1,x ; write the fill pattern to screen
+	; sta 2,x
+	; sta 3,x
+	; sta 4,x 
+	; ldb #0 ; reset step counter
+; @s	leax 32,x
+	; leay 32,y
+	; puls a
+	; inca
+	; cmpa #LADDER_HEIGHT
+	; bne @lp
+	; rts
+
 draw_exit1
-	ldx vramAddr 
-	tfr x,y
-	leax 333,x ; (LADDER_TOP*32 +18)
-	leay 338,y ; (LADDER_TOP*32 +18)
-;	lda #0
-;	ldb #0
-	ldd #0
-@lp pshs a
-	lda #BLACK_FILL
-	sta ,x
-	sta ,y
-	incb 
-	cmpb #STEP_SPACING
-	bne @s
-	sta 1,x ; write the fill pattern to screen
-	sta 2,x
-	sta 3,x
-	sta 4,x 
-	ldb #0 ; reset step counter
-@s	leax 32,x
-	leay 32,y
-	puls a
-	inca
-	cmpa #LADDER_HEIGHT
+	ldy vramAddr
+	leay 333,y ; (LADDER_TOP*32 +18)
+	
+	ldd #32
+	pshu d
+	jsr randmod
+	pulu d 	
+	ldx #static1
+	abx
+
+	ldb #LADDER_HEIGHT
+
+@lp pshs b ; loop counter
+	;get a random line
+	pshu x ; repush x
+	ldd #6 ; 6 bytes wide
+	pshu d	
+	lda #1 ; one line
+	pshu a
+	jsr draw_line
+	cmpx #end_static
+	blo @s
+	ldd #32
+	pshu d
+	jsr randmod
+	pulu d 	
+	ldx #static1
+	abx
+@s	puls b ; pop loop counter
+	decb 
 	bne @lp
 	rts
-
+	
 ; draw_front1
 	; ;each line is 30
 	; ldy vramAddr
@@ -2010,7 +2044,22 @@ flip_buffer
 
 	rts
 
-
-
-
+static1 
+	.db 00000000b,00001100b,00000000b,00000011b,00110000b,00001100b
+static2 
+	.db 00000011b,00110000b,00110000b,11001100b,00001100b,00110000b
+static3 
+	.db 00000000b,00000000b,00001100b,00000000b,00110000b,11000000b
+static4 
+	.db 00110000b,00000011b,00000000b,00110000b,00000011b,00110000b
+static5 
+	.db 00000000b,00110000b,11000000b,00000000b,11000000b,11000000b
+static6
+	.db 00000000b,00000000b,00000000b,00000000b,0000000000b,00000000b
+static7 
+	.db 00000000b,00000011b,00110000b,00000000b,11000000b,11000000b
+static8
+	.db 00000000b,00000000b,00000000b,00000000b,0000000000b,00000000b
+	end_static
+	.db 0
 
