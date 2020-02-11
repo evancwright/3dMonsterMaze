@@ -121,6 +121,9 @@ TOP EQU 8
 LADDER_HEIGHT EQU 145
 LADDER_TOP EQU 16
 STEP_SPACING EQU 10
+
+;PORTAL_TOP EQU 64
+PORTAL_Y EQU 1548 ; (64*32 +16)
  
 
 ;clear 400-600 hex, then set default values
@@ -687,7 +690,8 @@ draw_monster_state
 
 draw_exit1
 	ldy vramAddr
-	leay 333,y ; (LADDER_TOP*32 +18)
+	;leay 333,y ; (LADDER_TOP*32 +18)
+	leay PORTAL_Y,y ; (PORTAL_TOP*32 +16)
 	
 	ldd #32
 	pshu d
@@ -696,12 +700,13 @@ draw_exit1
 	ldx #static1
 	abx
 
-	ldb #LADDER_HEIGHT
+	;ldb #LADDER_HEIGHT
+	ldb #99
 
 @lp pshs b ; loop counter
 	;get a random line
-	pshu x ; repush x
-	ldd #6 ; 6 bytes wide
+	pshu x ; re-push x
+	ldd #8 ; 6 bytes wide
 	pshu d	
 	lda #1 ; one line
 	pshu a
@@ -2055,11 +2060,11 @@ static4
 static5 
 	.db 00000000b,00110000b,11000000b,00000000b,11000000b,11000000b
 static6
-	.db 00000000b,00000000b,00000000b,00000000b,0000000000b,00000000b
+	.db 00000000b,00000000b,00000000b,00000000b,000000000b,00000000b
 static7 
 	.db 00000000b,00000011b,00110000b,00000000b,11000000b,11000000b
 static8
 	.db 00000000b,00000000b,00000000b,00000000b,0000000000b,00000000b
-	end_static
+end_static
 	.db 0
 
