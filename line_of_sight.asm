@@ -19,7 +19,8 @@ check_see_player
 	sta player_seen
 	lda #CHASING
 	sta monster_state
- 	lda #RIGHT
+ 	;lda #RIGHT		 ; WRONG WRONG WRONG!
+	lda monsterLookDir
 	sta monster_direction
 	jsr move_monster
 	ldb #1
@@ -35,6 +36,8 @@ check_see_player_right
 	cmpa monster_y
 	bne @x
 	pshs x
+	lda #RIGHT
+	sta monsterLookDir
 	ldx #1
 	pshu x
 	jsr check_see_player
@@ -49,6 +52,8 @@ check_see_player_left
 	lda player_y 
 	cmpa monster_y
 	bne @x
+	lda #LEFT
+	sta monsterLookDir
 	pshs x
 	ldx #-1
 	pshu x
@@ -63,6 +68,8 @@ check_see_player_up
 	lda player_x 
 	cmpa monster_x
 	bne @x
+	lda #UP
+	sta monsterLookDir
 	pshs x
 	ldx #-MAZE_WIDTH
 	pshu x
@@ -77,6 +84,8 @@ check_see_player_down
 	lda player_x 
 	cmpa monster_x
 	bne @x
+	lda #DOWN
+	sta monsterLookDir
 	pshs x
 	ldx #MAZE_WIDTH
 	pshu x

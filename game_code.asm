@@ -1458,7 +1458,7 @@ move_monster
 	;clear monster stuck
 	clr turnsStuck
 	;move monster
-	rts ; HACK HACK HACK FOR TESTING
+	;rts ; HACK HACK HACK FOR TESTING
 	cmpa #UP
     bne	@d
 	leay -MAZE_WIDTH,y

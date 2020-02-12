@@ -356,9 +356,9 @@ copy_exit_data
 place_monster
 	pshs d,y
 	ldy #maze_data
-	;leay 20,y  ; skip top row of walls + 1st wall in row 2
+	leay 20,y  ; skip top row of walls + 1st wall in row 2
 	;leay 23,y  ; skip top row of walls + 1st wall in row 2
-	leay 80,y  ; for testing
+	;leay 80,y  ; for testing
 @lp lda ,y+  ; find 1st open square
 	cmpa #WALL
 	beq @lp
