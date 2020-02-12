@@ -580,22 +580,22 @@ draw_monster_state
 	jsr draw_hunting_you ; 7 or 8
 ;	jsr draw_footsteps_approaching
 	lbra @x
-@cl ;test seen (0-6 and los)
+@cl ;test seen (0-6 and l-o-s)
 	tst player_seen
-	beq @x ; not seen
+	beq @fs ; not seen - print footsteps msg
 	lda monster_orientation
 	;is rex to side
 	cmpa #TO_SIDE
 	bne @bh
 	jsr draw_rex_beside
-	bra @x
-	;is rex behind?
+	bra @x	;is rex behind?
 @bh	cmpa #BEHIND
 	bne @sn
 	jsr draw_rex_behind
 	bra @x
 @sn	jsr draw_player_seen
 	bra @x
+@fs	jsr draw_footsteps_approaching
 @x	rts
 
 ;draws the escape ladder
