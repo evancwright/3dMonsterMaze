@@ -575,6 +575,8 @@ draw_monster_state
 	lda diff_sum
 	cmpa #8
 	bhi @x ; too far
+	cmpa #1
+	lbeq @x ; player will see teeth
 	cmpa #6
 	bls @cl ; close
 	jsr draw_hunting_you ; 7 or 8
