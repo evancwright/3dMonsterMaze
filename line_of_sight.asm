@@ -4,11 +4,7 @@
 ;,u=the offset to move each check
 check_see_player
 	ldb #0 ; 
-	;check if y coords are same
-	lda player_y 
-	cmpa monster_y
-	bne @x
-	;look right until wall hit
+	;look  until wall hit
 	ldy monster_location
 @lp exg d,y  ; -> y to d
 	addd ,u
@@ -33,37 +29,57 @@ check_see_player
 
 ;result in 'b'
 check_see_player_right
+	;check if y coords are same
+	clrb
+	lda player_y 
+	cmpa monster_y
+	bne @x
 	pshs x
 	ldx #1
 	pshu x
 	jsr check_see_player
 	puls x
-	rts
+@x	rts
 
 	
 ;result in b
 check_see_player_left
+	;check if y coords are same
+	clrb
+	lda player_y 
+	cmpa monster_y
+	bne @x
 	pshs x
 	ldx #-1
 	pshu x
 	jsr check_see_player
 	puls x
-	rts	
+@x	rts	
 
 ;result in b
 check_see_player_up
+	;check if y coords are same
+	clrb
+	lda player_x 
+	cmpa monster_x
+	bne @x
 	pshs x
 	ldx #-MAZE_WIDTH
 	pshu x
 	jsr check_see_player
 	puls x
-	rts	
+@x	rts	
 
 ;result in b
 check_see_player_down
+	;check if y coords are same
+	clrb
+	lda player_x 
+	cmpa monster_x
+	bne @x
 	pshs x
 	ldx #MAZE_WIDTH
 	pshu x
 	jsr check_see_player
 	puls x
-	rts			
+@x	rts			

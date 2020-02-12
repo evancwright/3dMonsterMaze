@@ -1,4 +1,5 @@
-set_monster_message
+
+set_monster_orientation
 	clr monster_orientation
 	jsr set_left_right
 	lda monster_orientation
@@ -15,47 +16,39 @@ set_behind
 	bne @c2
 	lda monster_x
 	cmpa player_x
-	bne @c2
+	bne @x ; x's not same
 	lda player_y
 	cmpa monster_y 
-	bcc @c2 ; if (player_y > monster_y)
-	lda #BEHIND
-	sta monster_orientation
-	bra @x
-@c2 lda direction
-	cmpa #DOWN
+	bhi @x ; if (player_y > monster_y)
+	bra @y
+@c2 cmpa #DOWN
 	bne @c3
 	lda monster_x
 	cmpa player_x
-	bne @c3
+	bne @x  ; x's not same
 	lda player_y
 	cmpa monster_y
-	bcs @c3  ; if (player_y < monster_y)
-	lda #BEHIND
-	sta monster_orientation
-	bra @x
-@c3 lda direction
-	cmpa #LEFT ; west
+	blo @x  ; if (player_y < monster_y)
+	bra @y
+@c3 cmpa #LEFT ; west
 	bne @c4
 	lda monster_y
 	cmpa player_y
-	bne @c4
+	bne @x
 	lda player_x
 	cmpa monster_x
-	bcc @c4  ; if (player_x < monster_x)
-	lda #BEHIND
-	sta monster_orientation
-	bra @x
-@c4 lda direction
-	cmpa #RIGHT
+	bhi @c4 
+	bra @y  ; player x < monster x
+@c4 cmpa #RIGHT
 	bne @x
 	lda monster_y
 	cmpa player_y
 	bne @x
 	lda player_x
 	cmpa monster_x
-	bcc @x  ; if (player_x < monster_x)
-	lda #BEHIND
+	blo @x   
+	; (player_x < monster_x)
+@y  lda #BEHIND  ; player y <= monster_y
 	sta monster_orientation
 @x	rts
 
@@ -63,14 +56,14 @@ set_behind
 ;line of sight is not checked
 set_left_right
 	lda direction
-	ldb player_x
 	cmpa #UP
 	beq @c2
 	cmpa #DOWN
 	beq @c2
+	;looking left-right, are y's the same?
+	ldb player_x
 	cmpb monster_x
-	bne @c2
-	;x's are same, but player is looking left or right
+	bne @x
 	lda #TO_SIDE
 	sta monster_orientation
 	bra @x

@@ -123,8 +123,8 @@ LADDER_TOP EQU 16
 STEP_SPACING EQU 10
 
 ;PORTAL_TOP EQU 64
-PORTAL_Y EQU 1548 ; (64*32 +16)
- 
+PORTAL_Y EQU 1548 ; (64*32 +16) door 2 away
+; PORTAL_Y EQU 712 ; (22*32 + 3) door 1 away
 
 ;clear 400-600 hex, then set default values
 init_vars
@@ -551,7 +551,7 @@ draw_tiles
 ;draws the text over the view	
 draw_monster_state
 	jsr get_monster_dist
-	jsr set_monster_message
+	jsr set_monster_orientation
 	;clear the previous state
 	lda #WHITE_FILL
 	pshu a
@@ -567,98 +567,35 @@ draw_monster_state
 	;draw first sprite
 	lda monster_state
 	cmpa #IDLE
-	bne @th
+	bne @ns
 	inc turnsStuck
-	ldy #lies_in_wait_sprite ; couldn't move
-	lda #13 ; width in bytes
-	pshu a
-	lda #6 ; height in pixels
-	pshu a
-;	lda #9  ; x in bytes , y in pixels
-;	ldb #0
-	ldd #$0900
-	jsr draw_sprite	
+	jsr draw_in_wait
 	lbra @x 
-@th ;dist > 8
+@ns ;dist > 8  ; not stuck
 	lda diff_sum
 	cmpa #8
-	bcs @tf
-	;draw 'he is hunting you' sprite
-	ldy #hunting_you_sprite
-	lda #14 ; width in bytes
-	pshu a
-	lda #6 ; height in pixels
-	pshu a
-;	lda #8  ; x in bytes , y in pixels
-;	ldb #0
-	ldd #$0800	
-	jsr draw_sprite
-	bra @x	
-@tf  ;test footsteps approaching (7 or 8)
-	cmpa #7
-	beq @fs
-	cmpa #8
-	beq @fs
-	bra @ts 
-	;draw footsteps approaching
-@fs	ldy #footsteps_sprite ; idle
-	lda #19 ; width in bytes
-	pshu a
-	lda #6 ; height in pixels
-	pshu a
-;	lda #7  ; x in bytes , y in pixels
-;	ldb #0
-	ldd #$0700	
-	jsr draw_sprite
-	bra @x
-@ts ;test seen (3-6 and los)
-	tst player_seen
-	beq @bs
-	cmpa #4
-	beq @s
-	cmpa #5
-	beq @s
+	bhi @x ; too far
 	cmpa #6
-	beq @s
-	bra @bs
-@s	;draw 'seen' sprite
-	ldy #player_seen_sprite
-	lda #13 ; width in bytes
-	pshu a
-	lda #6 ; height in pixels
-	pshu a
-;	lda #9  ; x in bytes , y in pixels
-;	ldb #0
-	ldd #$0900
-	jsr draw_sprite
-	bra @x
-@bs ;is the monster to the side of the player?
-	lda monster_message
+	bls @cl ; close
+	jsr draw_hunting_you ; 7 or 8
+;	jsr draw_footsteps_approaching
+	lbra @x
+@cl ;test seen (0-6 and los)
+	tst player_seen
+	beq @x ; not seen
+	lda monster_orientation
+	;is rex to side
 	cmpa #TO_SIDE
 	bne @bh
-	;draw next to sprite
-	ldy #beside_you_sprite
-	lda #17 ; width in bytes
-	pshu a
-	lda #6 ; height in pixels
-	pshu a
-;	lda #6  ; x in bytes , y in pixels
-;	ldb #0
-	ldd #$0600
-	jsr draw_sprite	
+	jsr draw_rex_beside
 	bra @x
-@bh ;is the monster behind the player?
-	cmpa #BEHIND
-	bne @x  ; must be in front
-	ldy #behind_you_sprite 
-	lda #18 ; width in bytes
-	pshu a
-	lda #6 ; height in pixels
-	pshu a
-;	lda #11  ; x in bytes , y in pixels
-;	ldb #0
-	ldd #$0B00
-	jsr draw_sprite
+	;is rex behind?
+@bh	cmpa #BEHIND
+	bne @sn
+	jsr draw_rex_behind
+	bra @x
+@sn	jsr draw_player_seen
+	bra @x
 @x	rts
 
 ;draws the escape ladder
@@ -689,6 +626,9 @@ draw_monster_state
 	; rts
 
 draw_exit1
+
+;	jsr draw_front1
+
 	ldy vramAddr
 	;leay 333,y ; (LADDER_TOP*32 +18)
 	leay PORTAL_Y,y ; (PORTAL_TOP*32 +16)
@@ -701,12 +641,13 @@ draw_exit1
 	abx
 
 	;ldb #LADDER_HEIGHT
-	ldb #99
-
+	ldb #99  ; door 2 away
+	;ldb #150 ; door 1 away
 @lp pshs b ; loop counter
 	;get a random line
 	pshu x ; re-push x
-	ldd #8 ; 6 bytes wide
+	ldd #8 ; 6 bytes wide (2 away)
+	; ldd #16 ; 16 bytes wide (1 away)
 	pshu d	
 	lda #1 ; one line
 	pshu a
@@ -1517,6 +1458,7 @@ move_monster
 	;clear monster stuck
 	clr turnsStuck
 	;move monster
+	rts ; HACK HACK HACK FOR TESTING
 	cmpa #UP
     bne	@d
 	leay -MAZE_WIDTH,y
@@ -1960,6 +1902,79 @@ get_monster_dist
 	sta diff_sum
 	rts
 
+draw_rex_behind
+	ldy #behind_you_sprite 
+	lda #18 ; width in bytes
+	pshu a
+	lda #6 ; height in pixels
+	pshu a
+;	lda #10  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0700
+	jsr draw_sprite
+	rts
+	
+draw_rex_beside
+ 	;draw next to sprite
+	ldy #beside_you_sprite
+	lda #17 ; width in bytes
+	pshu a
+	lda #6 ; height in pixels
+	pshu a
+;	lda #6  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0700
+	jsr draw_sprite	
+	rts
+	
+draw_player_seen
+	ldy #player_seen_sprite
+	lda #13 ; width in bytes
+	pshu a
+	lda #6 ; height in pixels
+	pshu a
+;	lda #9  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0900
+	jsr draw_sprite
+	rts
+	
+draw_footsteps_approaching
+	ldy #footsteps_sprite ; idle
+	lda #19 ; width in bytes
+	pshu a
+	lda #6 ; height in pixels
+	pshu a
+;	lda #7  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0700	
+	jsr draw_sprite
+	rts
+
+draw_in_wait
+	ldy #lies_in_wait_sprite ; couldn't move
+	lda #13 ; width in bytes
+	pshu a
+	lda #6 ; height in pixels
+	pshu a
+;	lda #9  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0900
+	jsr draw_sprite	
+	rts
+	
+draw_hunting_you
+	ldy #hunting_you_sprite
+	lda #14 ; width in bytes
+	pshu a
+	lda #6 ; height in pixels
+	pshu a
+;	lda #8  ; x in bytes , y in pixels
+;	ldb #0
+	ldd #$0800	
+	jsr draw_sprite
+	rts
+	
 ;drawline(howmany, len (2 bytes), pattern)
 ;u = how many
 ;2,u = len
