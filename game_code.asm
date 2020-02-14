@@ -1596,7 +1596,11 @@ place_player
 	sty player_location
 	lda #UP
 	sta direction
-	jsr set_player_xy
+	lda -MAZE_WIDTH,y 
+	beq @h 	; if it's a hall (0), we're ok
+	lda #LEFT
+	sta direction
+@h	jsr set_player_xy
 	rts
 
 draw_player_direction
