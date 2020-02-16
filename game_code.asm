@@ -1554,19 +1554,54 @@ do_death_screen
 	jsr any_key
 ;	cmpa #'Y'
 	; bra @r  ; disabled trying again
-	lda monster_location
+	ldy monster_location
+	lda ,y
 	anda #CLEAR_MONSTER_MASK ; clear monster bit
-	sta monster_location
-	; jsr place_player
-	; jsr place_monster
-	; jsr set_tiles ; refresh what the player sees 
-	; bra @x
-@r	jsr reset_game  ; brand new game
+	sta ,y
+;@r	jsr reset_game  ; brand new game
+	jsr ask_retry
 @x	rts
+
+ask_retry
+	lda attemptNumber
+	bne @n
+	lda #WHITE_FILL
+	jsr cls
+	ldy #try_again_sprite
+	ldd #$060E
+	pshu d
+	lda #12  ; x,y
+	ldb #96
+	jsr draw_sprite
+	jsr flip_buffer
+@lp	jsr [POLCAT]
+	beq @lp
+	cmpa #'Y'
+	beq @y
+@n	jsr reset_game	
+	bra @x
+@y	jsr retry_game
+@x	rts
+
+;just put player and moster at start
+retry_game
+	;inc attemptNumber
+	lda attemptNumber
+	inca 
+	sta attemptNumber
+	;clear the monster
+	ldy monster_location
+	lda ,y
+	anda #CLEAR_MONSTER_MASK
+	sta ,y
+	jsr place_monster
+	jsr place_player
+	rts
 
 ;reinitializes all rooms and places
 ;player and hazards
 reset_game
+	clr attemptNumber
 	lda #WHITE_FILL
 	jsr cls
 try_again

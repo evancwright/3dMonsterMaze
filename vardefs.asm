@@ -88,3 +88,4 @@ playerWins EQU $5C8
 playerLosses EQU $5C9
 staticAddr	EQU $5CA ; 2 bytes for static address
 monsterLookDir EQU $5CC
+attemptNumber EQU $5CD
