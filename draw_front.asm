@@ -35,9 +35,9 @@ draw_front2
 	sta frontVSkipL 
 	lda #29+TOP
 	sta howManyTopWhite
-	lda #55
+	lda #56
 	sta howManyCheckered
-	lda #31
+	lda #30
 	sta howManyBottomWhite
 	lda #111
 	sta frontWallHeight
@@ -46,6 +46,27 @@ draw_front2
 	ldy #1176+32
 	sty rightEdgeOffset
 	jsr draw_front
+	
+	;clean up the bottom
+	;the wall has an odd number of lines
+	ldd vramAddr
+	addd #4743
+	tfr d,y
+	;4 lines of white (255)
+	lda #14  ; #20 ; skip amount
+	pshu a
+	lda #2 ; how many
+	pshu a
+	lda #18 ; width
+	pshu a
+	jsr draw_white_lines
+	;draw the black line across the bottom
+	leay -64,y  ; skip to next line
+	lda #BLACK_FILL
+	ldb #18
+@l1 sta ,y+
+	decb
+	bne @l1
 	rts	
 
 draw_front3
@@ -120,7 +141,8 @@ draw_front5
 	sty rightEdgeOffset
 	jsr draw_front
 	rts
-	
+
+;called by the other draw front functions	
 draw_front
 	;each line is 30
 	ldy vramAddr
@@ -176,6 +198,7 @@ draw_front
 	lda frontWallHeight ; #88
 	jsr draw_right_edge
 	;draw top black line
+
 	ldd leftEdgeOffset ; #1546
 	addd vramAddr ;
 	tfr d,y
