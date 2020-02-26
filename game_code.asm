@@ -1578,6 +1578,9 @@ ask_retry
 	beq @lp
 	cmpa #'Y'
 	beq @y
+	cmpa #'N'
+	beq @n
+	bra @lp
 @n	jsr reset_game	
 	bra @x
 @y	jsr retry_game
