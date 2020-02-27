@@ -316,22 +316,6 @@ blue_border
 	pshu a
 	jsr fill_rect
 	rts
- 
-
-      	
-waste_time
-	pshs d,x,y
-	ldb #$0F
-@l1	
-	lda #$FF
-@l2	deca
-	cmpa #0
-	bne @l2
-	decb
-	cmpb #0
-	bne @l1
-	puls d,x,y
-	rts
 	
 ;reseeds random seed	
 any_key

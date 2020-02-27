@@ -1096,7 +1096,20 @@ move_fwd
 	lda ,x
 	anda #EXIT_MASK
 	beq @d
-	jsr draw_title  ; waits for key press, then resets
+	jsr draw_escaped
+	jsr flip_buffer
+	jsr waste_time
+	jsr draw_escaped
+	;draw "this time..."
+	ldd #$0706 ; 12 x 108
+	pshu a 
+	pshu b
+	ldd #$0D6C 
+	ldy #this_time_sprite
+	jsr draw_sprite
+	jsr flip_buffer
+;	jsr draw_title  ; waits for key press, then resets
+	jsr waste_time
 	jsr reset_game
 	lda #WHITE_FILL
 	jsr cls
@@ -1570,7 +1583,7 @@ ask_retry
 	ldy #try_again_sprite
 	ldd #$060E
 	pshu d
-	lda #12  ; x,y
+	lda #11  ; x,y
 	ldb #96
 	jsr draw_sprite
 	jsr flip_buffer
@@ -2042,6 +2055,33 @@ draw_line
 	decb
 	bne @lp
 	leau 5,u ; pop params
+	rts
+	
+draw_escaped
+	lda #WHITE_FILL
+	jsr cls
+;	ldd #$0B06
+	lda #11
+	pshu a
+	lda #6
+	pshu a
+;	lda #11
+;	ldb #96
+	ldd #$0A60 ; coordinate
+	ldy #you_escaped_sprite
+	jsr draw_sprite
+	rts
+	
+;waste time
+waste_time
+	ldx #0
+@o	ldy #0
+@l	leay 1,y
+	cmpy #65535
+	bne @l
+	leax 1,x
+	cmpx #4
+	bne @o
 	rts
 	
 flip_buffer
