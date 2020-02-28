@@ -89,3 +89,5 @@ playerLosses EQU $5C9
 staticAddr	EQU $5CA ; 2 bytes for static address
 monsterLookDir EQU $5CC
 attemptNumber EQU $5CD
+slowSpeed EQU $5CE
+fastSpeed EQU $5D0

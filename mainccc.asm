@@ -107,8 +107,7 @@ reset
 	include calibration.asm ; include INLINE
 ;	jsr init_sprites
 	jsr draw_title   ; waits a for a keypress to continue
- 	lda #WHITE_FILL
-	jsr cls
+ 	jsr skill_level_screen
 	jsr reset_game
 	jsr draw_tiles
 @lp  ;main loop

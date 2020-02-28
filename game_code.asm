@@ -15,7 +15,11 @@ MONSTER_BIT EQU 4
 VISITTED_BIT EQU 8 
 CLEAR_MONSTER_MASK EQU 251 ; FBh
 CLEAR_BITS EQU 1
+;easy mode
+EASY_TICKS_PER_UPDATE EQU 2048 ; 2048
+EASY_TICKS_PER_UPDATE_FAST EQU 1024 ; 1024
  
+;hard
 TICKS_PER_UPDATE EQU 1024 ; 2048
 TICKS_PER_UPDATE_FAST EQU 768 ; 1024
  
@@ -1101,10 +1105,10 @@ move_fwd
 	jsr waste_time
 	jsr draw_escaped
 	;draw "this time..."
-	ldd #$0706 ; 12 x 108
+	ldd #$0706 ; 
 	pshu a 
 	pshu b
-	ldd #$0D6C 
+	ldd #$0F6C 
 	ldy #this_time_sprite
 	jsr draw_sprite
 	jsr flip_buffer
@@ -1336,7 +1340,7 @@ update_monster
 	cmpa #20
 	bne @g
 	jsr teleport_monster
-@g	ldy #TICKS_PER_UPDATE ; set monster to slow speed
+@g	ldy slowSpeed ; set monster to slow speed
 	sty monsterTicks
 	lda monster_state ; prev_state = state
 	sta prev_state
@@ -1363,7 +1367,7 @@ update_monster
 	bne @d  ;  great, we're chasing player, done 
 	jsr update_monster2  ; move monster
 	bra @e 
-@d	ldy #TICKS_PER_UPDATE_FAST ; speed up
+@d	ldy fastSpeed ; speed up
 	sty monsterTicks
 @e	ldy player_location
 	cmpy monster_location
@@ -1549,6 +1553,43 @@ ptr_to_coords
 	leau 1,u  ; pop local
 	puls d,x,y 
 	rts
+
+skill_level_screen
+	lda #WHITE_FILL
+	jsr cls
+	;draw the select sprite
+	ldd #$0E06 ; 14 x6
+	pshu a ; width
+	pshu b ; height
+	ldd #$0A50 ; x, y
+	ldy #skill_level_sprite
+	jsr draw_sprite
+	;draw the skill levels
+	ldd #$060E ; 6 bytes  x 14
+	pshu a ; width
+	pshu b ; height
+	ldd #$0F60 ; x, y
+	ldy #skill_levels_sprite
+	jsr draw_sprite
+	jsr flip_buffer
+@lp	jsr [POLCAT]
+	beq @lp
+	cmpa #'1'
+	beq @e
+	cmpa #'2'
+	beq @h
+	bra @lp
+@e
+	ldy #EASY_TICKS_PER_UPDATE
+	sty slowSpeed
+	ldy #EASY_TICKS_PER_UPDATE_FAST
+	sty fastSpeed
+	bra @x
+@h 	ldy #TICKS_PER_UPDATE
+	sty slowSpeed
+	ldy #TICKS_PER_UPDATE_FAST
+	sty fastSpeed
+@x	rts
 	
 do_death_screen
 	ldx #game_over_tile_map
@@ -2067,7 +2108,7 @@ draw_escaped
 	pshu a
 ;	lda #11
 ;	ldb #96
-	ldd #$0A60 ; coordinate
+	ldd #$0960 ; coordinate
 	ldy #you_escaped_sprite
 	jsr draw_sprite
 	rts
