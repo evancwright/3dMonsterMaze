@@ -9,6 +9,7 @@ make_maze
 	pshs a,y
 	;uncheat
 	clr cheat
+	clr enableCheat
 	;reset maze to all walls
 	lda #WALL
 	ldy #0
@@ -35,6 +36,7 @@ make_maze
 	puls a,y
     jsr place_exit
 	clr cheat
+	clr enableCheat
 	rts
 
 	
@@ -444,17 +446,7 @@ teleport_monster
 	;clear the monster_state
 	clr monster_state
 	rts
-	
-;cheat_on
-;	ldx #$8101 ; cmpa #WALL
-;	stx  cheat_poke 
-;	rts
-
-;cheat_off
-;	ldx #$8408 ; anda #VISITTED_BIT
-;	stx  cheat_poke 
-;	rts
-	
+		
 exit_up 
 	.db 1,1,0,1
 	.db	1,2,0,1

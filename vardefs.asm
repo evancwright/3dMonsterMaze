@@ -91,3 +91,4 @@ monsterLookDir EQU $5CC
 attemptNumber EQU $5CD
 slowSpeed EQU $5CE
 fastSpeed EQU $5D0
+enableCheat EQU $5D2

@@ -111,7 +111,11 @@ reset
 	jsr reset_game
 	jsr draw_tiles
 @lp  ;main loop
-	jsr [POLCAT]
+	lda enableCheat
+	cmpa #7
+	bne @nc
+	sta cheat ;if all 3 keys pressed, turn on cheat
+@nc	jsr [POLCAT]
 	ldy ticks ; monster update ticks
 	leay 1,y
 	sty ticks
@@ -131,11 +135,23 @@ reset
 	jsr set_tiles
 	jsr draw_tiles ; redraw in case monster now visible
 	bra @lp
-@k	cmpa #'Y'
+@k	cmpa #'X'
+	bne @y
+	lda enableCheat  ; toggle cheat code
+	ora #1
+	sta enableCheat
+	bra @lp
+@y	cmpa #'Y'
+	bne @z
+	lda enableCheat  ; toggle cheat code
+	ora #2
+	sta enableCheat
+	bra @lp
+@z 	cmpa #'Z'
 	bne @a
-	lda cheat  ; toggle cheat code
-	eora #1
-	sta cheat
+	lda enableCheat  ; toggle cheat code
+	ora #4
+	sta enableCheat
 	bra @lp
 @a	cmpa #'A'
 	beq @l
@@ -160,16 +176,13 @@ reset
 ;	bne @p
 ; 	cmpa #ESC  ; ESC
 ;	beq @quit 
-	bra @lp	   ; key wasn't handled
+	lbra @lp	   ; key wasn't handled
 @l	jsr turn_left
-	bra @lp
+	lbra @lp
 @r	jsr turn_right
-	bra @lp
-;@h  ;help
-	;jsr draw_walls
-@s  bra @lp
+@s  lbra @lp
 @m	jsr move_fwd
-	bra @lp
+	lbra @lp
 	bra @x
 @er	;error beep?
 @x	lbra @lp
