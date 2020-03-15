@@ -17,7 +17,7 @@ CLEAR_MONSTER_MASK EQU 251 ; FBh
 CLEAR_BITS EQU 1
 ;easy mode
 EASY_TICKS_PER_UPDATE EQU 2048 ; 2048
-EASY_TICKS_PER_UPDATE_FAST EQU 1024 ; 1024
+EASY_TICKS_PER_UPDATE_FAST EQU 3048 ; something slow
  
 ;hard
 TICKS_PER_UPDATE EQU 1024 ; 2048
@@ -604,32 +604,6 @@ draw_monster_state
 @fs	jsr draw_footsteps_approaching
 @x	rts
 
-;draws the escape ladder
-; draw_exit1
-	; ldx vramAddr 
-	; tfr x,y
-	; leax 333,x ; (LADDER_TOP*32 +18)
-	; leay 338,y ; (LADDER_TOP*32 +18)
-	; ldd #0
-; @lp pshs a
-	; lda #BLACK_FILL
-	; sta ,x
-	; sta ,y
-	; incb 
-	; cmpb #STEP_SPACING
-	; bne @s
-	; sta 1,x ; write the fill pattern to screen
-	; sta 2,x
-	; sta 3,x
-	; sta 4,x 
-	; ldb #0 ; reset step counter
-; @s	leax 32,x
-	; leay 32,y
-	; puls a
-	; inca
-	; cmpa #LADDER_HEIGHT
-	; bne @lp
-	; rts
 
 draw_exit1
 
@@ -670,304 +644,6 @@ draw_exit1
 	decb 
 	bne @lp
 	rts
-	
-; draw_front1
-	; ;each line is 30
-	; ldy vramAddr
-	; leay WALL_2_LEFT_X,y
-	; lda #2
-	; pshu a
-	; lda #4+TOP ; 4 lines
-	; pshu a	
-	; lda #30 ; 30 long
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;29 alternating (CHECKER1) 51 and (CHECKER2)204 line
-	; lda #0
-	; ldb #CHECKER1
-; @ol	pshs a ; save loop counter
- 	; lda #0
-; @l1	stb ,y+  ; 1st line
-	; inca
-	; cmpa #30  ; draw 30 chars
-	; bne @l1
-	; leay 2,y ; skip to next line
-	; comb  ; flip byte to draw to make checkered pattern
-	; puls a
-    ; inca 
-	; cmpa #158
-	; bne @ol
-	; ;one line of 51
-	; ldb #CHECKER1
- 	; lda #0
-; @l3	stb ,y+  ; 1st line
-	; inca
-	; cmpa #30
-	; bne @l3
-	; leay 2,y ; skip to next line
-
-	; ;line of black
-	; ldb #0
- 	; lda #0
-; @l4	stb ,y+  ; 1st line
-	; inca
-	; cmpa #30
-	; bne @l4
-	; leay 2,y ; skip to next line	
-	; ;4 lines of white (255)
-	; lda #2
-	; pshu a
-	; lda #4 ; how many
-	; pshu a
-	; lda #30 ; len
-	; pshu a
-	; jsr draw_white_lines
-	; ;now draw left and right black lines
-	; ldy #385 ; (12*32)+1
-	; lda #158
-	; jsr draw_left_edge
-	; ;draw rt and right black lines
-	; ldy #414 ; (12*32)+31
-	; lda #160
-	; jsr draw_right_edge
-	; ;draw top black line
-	; ldd #385
-	; addd vramAddr ;
-	; tfr d,y
-	; ldd #0
-; @l	sta ,y+
-	; incb
-	; cmpb #30
-	; bne @l
-	; rts
-
-; draw_front2
-	; ;each line is 30
-	; ldy vramAddr
-	; leay WALL_3_LEFT_X,y
-	; ;  alternating 51 and 204 line
-	; ;4 lines of white (255)
-	; lda #14 ; skip
-    ; pshu a
-	; lda #28+TOP ; how many (top = 8)
-	; pshu a
-	; lda #18 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;checkered lines
-	; lda #14 ; skip amount
-	; pshu a
-	; lda #56 ; how many pairs
-	; pshu a
-	; lda #18 ; len
-	; pshu a	
-	; jsr draw_checkered_lines
- 	; ;line of black
-	; ldb #0
- 	; lda #0
-; @l4	stb ,y+  ; 1st line
-	; inca
-	; cmpa #18
-	; bne @l4
-	; leay 14,y
-	; ;23 lines of white (255)
-	; lda #14 ; skip amount
-	; pshu a
-	; lda #23 ; how many
-	; pshu a
-	; lda #18 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;now draw left and right black lines
-	; ldy #1159 ; (20*32)+6
-	; lda #113
-	; jsr draw_left_edge
-	; ;draw rt and right black lines
-	; ldy #1176 ;  
-	; lda #113
-	; jsr draw_right_edge	
-	; ;draw top black line
-	; ldd #1159
-	; addd vramAddr ;
-	; tfr d,y
-	; ldd #0
-; @l	sta ,y+
-	; incb
-	; cmpb #18
-	; bne @l
-	; rts
-
-; draw_front3
-	; ;each line is 30
-	; ldy vramAddr
-	; leay WALL_4_LEFT_X,y
-	; ;  alternating 51 and 204 line
-	; ;white lines
-	; lda #20 ; skip
-    ; pshu a
-	; lda #40+TOP ; how many
-	; pshu a
-	; lda #12 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;checkered lines
-	; lda #20 ; skip amount
-	; pshu a
-	; lda #44 ; how many pairs
-	; pshu a
-	; lda #12 ; len
-	; pshu a	
-	; jsr draw_checkered_lines
- 	; ;line of black
-	; ldb #0
- 	; lda #0
-; @l4	stb ,y+  ; 1st line
-	; inca
-	; cmpa #12
-	; bne @l4
-	; leay 20,y
-	; ;4 lines of white (255)
-	; lda #20 ; skip amount
-	; pshu a
-	; lda #39 ; how many
-	; pshu a
-	; lda #12 ; len
-	; pshu a
-	; jsr draw_white_lines
-	; ;now draw left and right black lines
-	; ldy #1546 ;  
-	; lda #88
-	; jsr draw_left_edge
-	; ;now draw right black line
-	; ldy #1558 ;  
-	; lda #88
-	; jsr draw_left_edge
-	; ;draw top black line
-	; ldd #1546
-	; addd vramAddr ;
-	; tfr d,y
-	; ldd #0
-; @l	sta ,y+
-	; incb
-	; cmpb #12
-	; bne @l
-	; rts
-
-
-; draw_front4
-	; ;each line is 30
-	; ldy vramAddr
-	; leay WALL_5_LEFT_X,y
-	; ;  alternating 51 and 204 line
-	; ;white lines
-	; lda #24 ; skip
-    ; pshu a
-	; lda #48+TOP ; how many
-	; pshu a
-	; lda #8 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;checkered lines
-	; lda #24 ; skip amount
-	; pshu a
-	; lda #36 ; how many pairs
-	; pshu a
-	; lda #8 ; len
-	; pshu a	
-	; jsr draw_checkered_lines
- 	; ;line of black
-	; ldb #0
- 	; lda #0
-; @l4	stb ,y+  ; 1st line
-	; inca
-	; cmpa #8
-	; bne @l4
-	; leay 24,y
-	; ;4 lines of white (255)
-	; lda #24 ; skip amount
-	; pshu a
-	; lda #47 ; how many
-	; pshu a
-	; lda #8 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;draw left vertical line
-	; ldy #1836 ;  
-	; lda #72
-	; jsr draw_left_edge	
-	; ;draw right vertical line
-	; ldy #1812 ;  
-	; lda #73
-	; jsr draw_left_edge
-	; ;draw top edge
-	; ldd #1804 ;  
-	; addd vramAddr
-	; tfr d,y
-	; lda #0
-	; ldb #0
-; @l	sta ,y+
-	; incb
-	; cmpb #8
-	; bne @l
-	; rts	
-	
-  	
-; draw_front5
-	; ;each line is 30
-	; ldy vramAddr
-	; leay WALL_6_LEFT_X,y
-	; ;  alternating 51 and 204 line
-	; ;white lines
-	; lda #28 ; skip
-    ; pshu a
-	; lda #56+TOP ; how many
-	; pshu a
-	; lda #4 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;checkered lines
-	; lda #28 ; skip amount
-	; pshu a
-	; lda #28 ; how many pairs
-	; pshu a
-	; lda #4 ; len
-	; pshu a	
-	; jsr draw_checkered_lines
- 	; ;line of black
-	; ldb #0
- 	; lda #0
-; @l4	stb ,y+  ; 1st line
-	; inca
-	; cmpa #4
-	; bne @l4
-	; leay 28,y
-	; ;4 lines of white (255)
-	; lda #28 ; skip amount
-	; pshu a
-	; lda #55 ; how many
-	; pshu a
-	; lda #4 ; len
-	; pshu a
-	; jsr draw_white_lines ; 4 lines of white
-	; ;draw left edge
-	; ldy #2062 ;  
-	; lda #57
-	; jsr draw_left_edge	
-	; ;draw right edge
-	; ldy #2065 ;  
-	; lda #57
-	; jsr draw_right_edge		
-	; ;top line
-	; ldd #2062
-	; addd vramAddr
-	; tfr d,y
-	; lda #0
-	; sta ,y+
-	; sta ,y+
-	; sta ,y+
-	; sta ,y+
-	; rts	
-
 	
 ;draws 4 white lines 
 ;(how many, len, skip amount)
@@ -1595,10 +1271,9 @@ do_death_screen
 	ldx #game_over_tile_map
 	jsr draw_tile_map
 ;;;;;;;;;;;;ANY KEY;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	lda #12
+	ldd #$0C06
 	pshu a
-	lda #6
-	pshu a
+	pshu b
 	lda #10
 	ldb #140
 	ldy #press_a_key
@@ -1612,7 +1287,6 @@ do_death_screen
 	lda ,y
 	anda #CLEAR_MONSTER_MASK ; clear monster bit
 	sta ,y
-;@r	jsr reset_game  ; brand new game
 	jsr ask_retry
 @x	rts
 
@@ -1711,10 +1385,6 @@ draw_player_direction
 	bra @d
 @w  ldy #compass_east	
 @d	
-;	lda #2 ; width
-;	pshu a
-;	lda #8
-;	pshu a
 	ldd #$0802
 	pshu d
 	lda #16  ; x,y
@@ -2006,8 +1676,6 @@ draw_rex_behind
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-;	lda #10  ; x in bytes , y in pixels
-;	ldb #0
 	ldd #$0700
 	jsr draw_sprite
 	rts
@@ -2019,8 +1687,6 @@ draw_rex_beside
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-;	lda #6  ; x in bytes , y in pixels
-;	ldb #0
 	ldd #$0700
 	jsr draw_sprite	
 	rts
@@ -2031,8 +1697,6 @@ draw_player_seen
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-;	lda #9  ; x in bytes , y in pixels
-;	ldb #0
 	ldd #$0900
 	jsr draw_sprite
 	rts
@@ -2043,8 +1707,6 @@ draw_footsteps_approaching
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-;	lda #7  ; x in bytes , y in pixels
-;	ldb #0
 	ldd #$0700	
 	jsr draw_sprite
 	rts
@@ -2055,8 +1717,6 @@ draw_in_wait
 	pshu a
 	lda #6 ; height in pixels
 	pshu a
-;	lda #9  ; x in bytes , y in pixels
-;	ldb #0
 	ldd #$0900
 	jsr draw_sprite	
 	rts
@@ -2118,7 +1778,7 @@ waste_time
 	ldx #0
 @o	ldy #0
 @l	leay 1,y
-	cmpy #65535
+	cmpy #48000
 	bne @l
 	leax 1,x
 	cmpx #4
